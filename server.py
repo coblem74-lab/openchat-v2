@@ -32,6 +32,7 @@ from flask import Flask, abort, jsonify, request, send_from_directory
 BASE_DIR = Path(__file__).resolve().parent
 DIST_DIR = BASE_DIR / "dist"
 ACCOUNTS_FILE = Path(os.environ.get("ACCOUNTS_FILE", BASE_DIR / "accounts.json"))
+MSGS_FILE = Path(os.environ.get("MSGS_FILE", BASE_DIR / "msgs.json"))
 PORT = int(os.environ.get("PORT", "3000"))
 GOOGLE_CLIENT_ID = os.environ.get(
     "GOOGLE_CLIENT_ID",
@@ -249,11 +250,25 @@ GLOBAL_CHAT_KEY = "global"
 GLOBAL_STATE_ID = "__global__"
 
 
-def _global_store(db):
-    st = db["states"].setdefault(GLOBAL_STATE_ID, {})
-    msgs = st.setdefault("messages", {})
+def load_msgs():
+    """Global chat messages live in a separate msgs.json file."""
+    try:
+        with open(MSGS_FILE, "r", encoding="utf-8-sig") as f:
+            m = json.load(f)
+    except Exception:
+        m = {}
+    msgs = m.setdefault("messages", {})
     msgs.setdefault(GLOBAL_CHAT_KEY, [])
-    return msgs
+    return {"messages": msgs}
+
+
+def save_msgs(m):
+    with open(MSGS_FILE, "w", encoding="utf-8") as f:
+        json.dump(m, f, indent=2)
+
+
+def _global_store(db=None):
+    return load_msgs()["messages"]
 
 
 def merge_global_messages(db, incoming):
@@ -272,6 +287,7 @@ def merge_global_messages(db, incoming):
                 order.append(m["id"])
             by_id[m["id"]] = m
     gm[GLOBAL_CHAT_KEY] = [by_id[i] for i in order if i in by_id]
+    save_msgs({"messages": gm})
     return gm[GLOBAL_CHAT_KEY]
 
 
