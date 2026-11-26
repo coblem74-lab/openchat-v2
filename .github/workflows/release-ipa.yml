@@ -1,0 +1,47 @@
+name: Build & Release IPA (OpenChat V2)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ipa:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build (unsigned)
+        working-directory: ios
+        run: |
+          set -e
+          xcodegen generate
+          xcodebuild \
+            -project OpenChatV2.xcodeproj \
+            -scheme OpenChatV2 \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_IDENTITY="" \
+            build
+          APP_PATH=$(find build -name "OpenChatV2.app" -type d | head -1)
+          rm -rf Payload
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -qry OpenChatV2-unsigned.ipa Payload
+
+      - name: Publish IPA to Releases
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          gh release create v2.0.0 --title "OpenChat V2" --notes "" || true
+          gh release upload v2.0.0 ios/OpenChatV2-unsigned.ipa --clobber
