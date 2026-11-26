@@ -20,3 +20,6 @@ create-repo.ps1
 push-deployment.ps1
 tools/
 cleanup.ps1
+server.err
+openchat-v2-debug.apk
+__pycache__/

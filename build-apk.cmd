@@ -162,7 +162,7 @@ echo       "%SDK_DIR%\platform-tools\adb.exe" install -r "%APK_OUT%"
 echo    (or copy the APK to the phone and tap it)
 echo.
 echo  The app is pre-configured to talk to:
-echo    https://lid-graduation-automotive-mere.trycloudflare.com
+echo    https://baths-theoretical-leaf-dry.trycloudflare.com
 echo ============================================
 start "" explorer /select,"%APK_OUT%"
 exit /b 0

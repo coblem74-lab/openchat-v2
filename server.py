@@ -47,7 +47,7 @@ MUSIC_CACHE_TTL_S = 6 * 60 * 60  # 6h
 # ---------- tiny JSON "database" ----------
 def load_db():
     try:
-        with open(ACCOUNTS_FILE, "r", encoding="utf-8") as f:
+        with open(ACCOUNTS_FILE, "r", encoding="utf-8-sig") as f:
             db = json.load(f)
         return {
             "accounts": db.get("accounts", []),

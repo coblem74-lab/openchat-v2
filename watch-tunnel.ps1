@@ -66,6 +66,21 @@ function Get-CurrentUrl {
 }
 
 function Test-Tunnel($url) {
+  # Local outbound access to trycloudflare.com can be blocked even when the
+  # tunnel is healthy. Prefer cloudflared's own readiness endpoint.
+  $proc = Get-Process -Name 'cloudflared' -ErrorAction SilentlyContinue
+  if (-not $proc) { return $false }
+  try {
+    $r = Invoke-WebRequest 'http://127.0.0.1:20245/ready' -UseBasicParsing -TimeoutSec 4
+    if ($r.StatusCode -eq 200) { return $true }
+  } catch { }
+  # Fallback: a registered connector in the log means the edge is connected.
+  foreach ($f in @($tunnelLog, "$tunnelLog.err")) {
+    try {
+      $content = Get-Content $f -Raw -ErrorAction SilentlyContinue
+      if ($content -match 'Registered tunnel connection') { return $true }
+    } catch { }
+  }
   if (-not $url) { return $false }
   try { (Invoke-WebRequest "$url/api/health" -UseBasicParsing -TimeoutSec 8) | Out-Null; return $true } catch { return $false }
 }
@@ -90,7 +105,8 @@ function Start-Tunnel {
   Start-Sleep -Seconds 2
 
   Remove-Item $tunnelLog -ErrorAction SilentlyContinue
-  Start-Process -FilePath $cloudflaredExe -ArgumentList "tunnel --url $LocalApi" -RedirectStandardOutput $tunnelLog -RedirectStandardError "$tunnelLog.err" -NoNewWindow
+  Remove-Item "$tunnelLog.err" -ErrorAction SilentlyContinue
+  Start-Process -FilePath $cloudflaredExe -ArgumentList "tunnel --url $LocalApi --no-autoupdate --protocol http2 --metrics 127.0.0.1:20245" -RedirectStandardOutput $tunnelLog -RedirectStandardError "$tunnelLog.err" -NoNewWindow
 
   # wait up to 60s for trycloudflare.com URL
   $deadline = (Get-Date).AddSeconds(60)
@@ -168,9 +184,9 @@ $newUrl = Start-Tunnel
 
 if (-not $newUrl) { Log 'FATAL: tunnel failed to start'; exit 1 }
 
-# write local file
-@{ url = $newUrl; updatedAt = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') } |
-  ConvertTo-Json -Compress | Set-Content $linkFile -Encoding utf8
+# write local file (UTF-8, no BOM — Android/iOS JSON parsers reject BOM)
+$jsonOut = @{ url = $newUrl; updatedAt = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') } | ConvertTo-Json -Compress
+[System.IO.File]::WriteAllText($linkFile, $jsonOut, (New-Object System.Text.UTF8Encoding($false)))
 
 # update GitHub (best effort)
 Update-RepoFile $newUrl | Out-Null

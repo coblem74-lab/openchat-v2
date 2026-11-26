@@ -17,7 +17,7 @@ const DEFAULT_AVATAR =
 // ---------- tiny JSON "database" ----------
 function loadDb() {
   try {
-    const raw = fs.readFileSync(ACCOUNTS_FILE, 'utf8');
+    const raw = fs.readFileSync(ACCOUNTS_FILE, 'utf8').replace(/^\uFEFF/, '');
     const db = JSON.parse(raw);
     return { accounts: db.accounts ?? [], sessions: db.sessions ?? {}, states: db.states ?? {} };
   } catch {
