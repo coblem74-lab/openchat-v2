@@ -112,6 +112,10 @@ app = Flask(__name__, static_folder=None)
 @app.after_request
 def add_headers(resp):
     resp.headers["X-Content-Type-Options"] = "nosniff"
+    # Allow bundled apps (file://, Electron, capacitor) and other origins to call the API.
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return resp
 
 
