@@ -248,6 +248,7 @@ struct ChatView: View {
             .padding(10)
         }
         .background(bg.ignoresSafeArea())
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear { refresh() }
     }
 

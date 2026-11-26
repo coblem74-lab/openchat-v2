@@ -137,7 +137,7 @@ function GlobalChat() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#1e1f22] text-[#dbdee1] font-sans antialiased select-none">
-      <div className="flex flex-col w-full max-w-3xl mx-auto h-full border-x border-[#232428]">
+      <div className="flex flex-col w-full h-full border-x border-[#232428]">
         {/* Header */}
         <header className="flex items-center gap-3 px-4 h-14 bg-[#2b2d31] border-b border-[#232428] shrink-0">
           <MessageCircle className="w-5 h-5 text-[#5865F2]" />
