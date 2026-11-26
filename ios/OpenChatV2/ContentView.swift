@@ -129,6 +129,7 @@ struct AuthView: View {
 
         busy = true
         Task {
+            await Api.refreshServerURL()  // re-point to the live server before hitting it
             let result = mode == "signup" ? await Api.register(username: u, password: password)
                                           : await Api.login(username: u, password: password)
             await MainActor.run {
@@ -253,6 +254,7 @@ struct ChatView: View {
     private func refresh() {
         Task {
             await MainActor.run { busy = true; status = "Syncing…" }
+            await Api.refreshServerURL()  // ensure we're talking to the live server
             let me = await Api.me()
             let state = await Api.fetchState()
             await MainActor.run {
