@@ -22,7 +22,7 @@ enum Api {
            await probeURL(stored) {
             return
         }
-        guard let u = URL(string: "https://raw.githubusercontent.com/mrtristinthegoanimater449/openchat-v2/main/cloudflared_link.json") else { return }
+        guard let u = URL(string: "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json") else { return }
         guard let (data, resp) = try? await URLSession.shared.data(from: u),
               (resp as? HTTPURLResponse)?.statusCode == 200,
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

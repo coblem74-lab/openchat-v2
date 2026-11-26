@@ -85,7 +85,7 @@ object Api {
     }
 
     private const val DISCOVERY_URL =
-        "https://raw.githubusercontent.com/mrtristinthegoanimater449/openchat-v2/main/cloudflared_link.json"
+        "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json"
 
     /**
      * Fetch the current tunnel URL from the repo. Cheap, used to self-update

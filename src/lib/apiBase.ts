@@ -6,7 +6,7 @@
 //  3. fetch cloudflared_link.json from raw.githubusercontent.com (committed to repo,
 //     kept current by watch-tunnel.ps1 whenever the tunnel restarts)
 const AUTO_DISCOVER_URL =
-  'https://raw.githubusercontent.com/mrtristinthegoanimater449/openchat-v2/main/cloudflared_link.json';
+  'https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json';
 
 const STORAGE_KEY = 'openchat_server';
 
