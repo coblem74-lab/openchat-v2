@@ -23,48 +23,30 @@ function GlobalChat() {
   const [musicBusy, setMusicBusy] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [musicOn, setMusicOn] = useState(false);
-  const pulledRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const user = session!;
 
-  // Pull from server on mount
+  // Pull from server + auto-refresh every 100ms (fetch only; sends save explicitly)
   useEffect(() => {
     const token = localStorage.getItem('openchat_token');
     if (!token) return;
-    fetch(apiUrl('/api/state'), {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        const state = data?.state;
-        const list = state?.messages?.[CHAT_KEY];
-        if (Array.isArray(list)) setMessages(list);
-        pulledRef.current = true;
-        setStatus('connected');
-      })
-      .catch(() => {
-        pulledRef.current = true;
-        setStatus('offline');
-      });
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const r = await fetch(apiUrl('/api/state'), { headers: { Authorization: `Bearer ${token}` } });
+        const data = r.ok ? await r.json() : null;
+        const list = data?.state?.messages?.[CHAT_KEY];
+        if (!cancelled && Array.isArray(list)) setMessages(list);
+        if (!cancelled) setStatus('connected');
+      } catch {
+        if (!cancelled) setStatus('offline');
+      }
+    };
+    load();
+    const id = setInterval(load, 100);
+    return () => { cancelled = true; clearInterval(id); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Push to server, debounced
-  useEffect(() => {
-    if (!pulledRef.current) return;
-    const token = localStorage.getItem('openchat_token');
-    if (!token) return;
-    const t = setTimeout(() => {
-      fetch(apiUrl('/api/state'), {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ state: { messages: { [CHAT_KEY]: messages } } }),
-      })
-        .then(() => setStatus('connected'))
-        .catch(() => setStatus('offline'));
-    }, 700);
-    return () => clearTimeout(t);
-  }, [messages]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,21 +56,28 @@ function GlobalChat() {
     e?.preventDefault();
     const content = draft.trim();
     if (!content) return;
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `msg-${Date.now()}`,
-        channelId: CHAT_KEY,
-        author: {
-          id: user.id,
-          username: user.username,
-          discriminator: user.discriminator,
-          avatar: user.avatar,
-        },
-        content,
-        timestamp: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    const msg = {
+      id: `msg-${Date.now()}`,
+      channelId: CHAT_KEY,
+      author: {
+        id: user.id,
+        username: user.username,
+        discriminator: user.discriminator,
+        avatar: user.avatar,
       },
-    ]);
+      content,
+      timestamp: 'Today at ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    const next = [...messages, msg];
+    setMessages(next);
+    const token = localStorage.getItem('openchat_token');
+    if (token) {
+      fetch(apiUrl('/api/state'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ state: { messages: { [CHAT_KEY]: next } } }),
+      }).catch(() => setStatus('offline'));
+    }
     setDraft('');
   };
 
