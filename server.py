@@ -245,13 +245,48 @@ def logout():
     return jsonify(success=True)
 
 
+GLOBAL_CHAT_KEY = "global"
+GLOBAL_STATE_ID = "__global__"
+
+
+def _global_store(db):
+    st = db["states"].setdefault(GLOBAL_STATE_ID, {})
+    msgs = st.setdefault("messages", {})
+    msgs.setdefault(GLOBAL_CHAT_KEY, [])
+    return msgs
+
+
+def merge_global_messages(db, incoming):
+    """Merge incoming messages into one shared global chat, deduped by id."""
+    gm = _global_store(db)
+    by_id = {}
+    order = []
+    for m in gm[GLOBAL_CHAT_KEY]:
+        if isinstance(m, dict) and m.get("id"):
+            if m["id"] not in by_id:
+                order.append(m["id"])
+            by_id[m["id"]] = m
+    for m in incoming or []:
+        if isinstance(m, dict) and m.get("id"):
+            if m["id"] not in by_id:
+                order.append(m["id"])
+            by_id[m["id"]] = m
+    gm[GLOBAL_CHAT_KEY] = [by_id[i] for i in order if i in by_id]
+    return gm[GLOBAL_CHAT_KEY]
+
+
 @app.get("/api/state")
 def state_get():
     db = load_db()
     account = account_for_token(db)
     if not account:
         return jsonify(success=False, message="Not signed in."), 401
-    return jsonify(success=True, state=db["states"].get(account["id"]))
+    acct = db["states"].get(account["id"], {})
+    merged = json.loads(json.dumps(acct)) if acct else {}
+    m = merged.setdefault("messages", {})
+    m[GLOBAL_CHAT_KEY] = _global_store(db)[GLOBAL_CHAT_KEY]
+    merged["messages"] = m
+    return jsonify(success=True, state=merged)
 
 
 @app.put("/api/state")
@@ -265,7 +300,16 @@ def state_put():
         return jsonify(success=False, message="Body must be { state: object }."), 400
     if len(json.dumps(state)) > 2 * 1024 * 1024:
         return jsonify(success=False, message="State too large (max 2 MB)."), 413
-    db["states"][account["id"]] = state
+    incoming = None
+    msgs = state.get("messages")
+    if isinstance(msgs, dict):
+        incoming = msgs.get(GLOBAL_CHAT_KEY)
+    merge_global_messages(db, incoming)
+    acct_state = json.loads(json.dumps(state))
+    am = acct_state.get("messages")
+    if isinstance(am, dict):
+        am.pop(GLOBAL_CHAT_KEY, None)
+    db["states"][account["id"]] = acct_state
     save_db(db)
     return jsonify(success=True, savedAt=int(time.time() * 1000))
 
