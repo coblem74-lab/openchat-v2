@@ -1,0 +1,5 @@
+{
+  "url": "https://openchat-v2-mrtristin.loca.lt",
+  "updatedAt": "2026-11-26T02:00:00Z",
+  "note": "Served by the localtunnel npm client with a fixed subdomain. watch-tunnel.ps1 keeps the Flask server and tunnel alive and reuses this same URL after restarts."
+}

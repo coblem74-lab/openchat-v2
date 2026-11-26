@@ -162,7 +162,7 @@ echo       "%SDK_DIR%\platform-tools\adb.exe" install -r "%APK_OUT%"
 echo    (or copy the APK to the phone and tap it)
 echo.
 echo  The app is pre-configured to talk to:
-echo    https://openchat-mrtristin.loca.lt
+echo    https://openchat-v2-mrtristin.loca.lt
 echo ============================================
 start "" explorer /select,"%APK_OUT%"
 exit /b 0

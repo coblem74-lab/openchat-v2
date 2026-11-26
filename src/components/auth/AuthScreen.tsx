@@ -101,7 +101,7 @@ export const AuthScreen: React.FC = () => {
               {serverSaving ? 'Connecting…' : 'Connect'}
             </button>
             <p className="text-[11px] text-[#4e5058] text-center">
-              Tip: a fixed domain beats a disposable loca.lt URL.
+              Tip: a fixed domain beats a disposable trycloudflare.com URL.
             </p>
           </form>
         </motion.div>

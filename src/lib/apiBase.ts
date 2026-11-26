@@ -1,12 +1,20 @@
-// The public npm localtunnel endpoint is the default for web builds and desktop.
-export const DEFAULT_API_BASE = 'https://openchat-mrtristin.loca.lt';
+// Auto-discovery for the OpenChat V2 server URL.
+//
+// Resolution order on startup:
+//  1. localStorage 'openchat_server' (user-configured or previously discovered)
+//  2. globalThis.monacoServerUrl, set by the desktop shell via preload/query param
+//  3. fetch cloudflared_link.json from raw.githubusercontent.com (committed to repo,
+//     kept current by watch-tunnel.ps1 whenever the tunnel restarts)
+const AUTO_DISCOVER_URL =
+  'https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json';
+
 const STORAGE_KEY = 'openchat_server';
 
 export function getApiBase(): string {
   try {
-    return (localStorage.getItem(STORAGE_KEY) || DEFAULT_API_BASE).trim().replace(/\/+$/, '');
+    return (localStorage.getItem(STORAGE_KEY) || '').trim();
   } catch {
-    return DEFAULT_API_BASE;
+    return '';
   }
 }
 
@@ -45,24 +53,41 @@ async function probeUrl(url: string): Promise<boolean> {
   }
 }
 
-/** Resolve a saved/desktop override, otherwise use the npm tunnel endpoint. */
+/**
+ * Resolve the server URL at startup. Always probes the stored URL; if it's
+ * dead, fall back to the auto-discovered cloudflared_link.json from the repo.
+ */
 export async function resolveServerUrl(): Promise<string> {
   const stored = getApiBase();
 
   if (stored && (await probeUrl(stored))) {
-    setApiBase(stored);
     return stored;
   }
 
+  // Stored URL is dead or missing → try discovery
   if (isDesktop()) {
     const params = new URLSearchParams(window.location.search);
     const server = (params.get('server') || '').trim().replace(/\/+$/, '');
-    if (server && server !== stored && (await probeUrl(server))) {
+    if (server && (await probeUrl(server))) {
       setApiBase(server);
       return server;
     }
   }
 
-  setApiBase(DEFAULT_API_BASE);
-  return DEFAULT_API_BASE;
+  try {
+    const res = await fetch(AUTO_DISCOVER_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      const discovered = String(data?.url || '').trim().replace(/\/+$/, '');
+      if (/^https?:\/\/.+/.test(discovered)) {
+        setApiBase(discovered);
+        return discovered;
+      }
+    }
+  } catch {
+    /* GitHub raw unreachable */
+  }
+
+  // Discovery failed → keep stored value rather than nothing (caller may retry later)
+  return stored || '';
 }

@@ -3,7 +3,7 @@ import Foundation
 /// Minimal JSON-over-HTTP client for the OpenChat V2 server.
 /// All data (accounts, app state) comes from the server.
 enum Api {
-    static let defaultServerURL = "https://openchat-mrtristin.loca.lt"
+    static let defaultServerURL = "https://openchat-v2-mrtristin.loca.lt"
 
     private static var serverURL: String {
         UserDefaults.standard.string(forKey: "server_url") ?? defaultServerURL
@@ -22,7 +22,7 @@ enum Api {
            await probeURL(stored) {
             return
         }
-        guard let u = URL(string: "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/npm_tunnel_link.json") else { return }
+        guard let u = URL(string: "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json") else { return }
         guard let (data, resp) = try? await URLSession.shared.data(from: u),
               (resp as? HTTPURLResponse)?.statusCode == 200,
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
