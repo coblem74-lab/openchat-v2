@@ -14,7 +14,7 @@ import java.net.URL
 object Api {
 
     // Built-in default server — no manual entry needed.
-    const val DEFAULT_SERVER_URL = "https://openchat-v2-mrtristin.loca.lt"
+    const val DEFAULT_SERVER_URL = "https://openchat-mrtristin.loca.lt"
 
     fun getServerUrl(context: Context): String =
         prefs(context).getString("server_url", DEFAULT_SERVER_URL)
@@ -85,7 +85,7 @@ object Api {
     }
 
     private const val DISCOVERY_URL =
-        "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/cloudflared_link.json"
+        "https://raw.githubusercontent.com/coblem74-lab/openchat-v2/main/npm_tunnel_link.json"
 
     /**
      * Fetch the current tunnel URL from the repo. Cheap, used to self-update

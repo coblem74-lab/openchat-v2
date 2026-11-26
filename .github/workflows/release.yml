@@ -276,6 +276,6 @@ jobs:
           - OpenChatV2-debug.apk — Android debug build
           - OpenChatV2-unsigned.ipa — iOS (AltStore/Sideloadly)
 
-          All apps point at: https://openchat-v2-mrtristin.loca.lt
+          All apps point at: https://openchat-mrtristin.loca.lt
           (update the app if the tunnel URL changes)" \
             OpenChatV2-Setup.exe OpenChatV2-macOS.pkg OpenChatV2.flatpak OpenChatV2-debug.apk OpenChatV2-unsigned.ipa

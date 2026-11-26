@@ -5,7 +5,7 @@
   client with a fixed subdomain, so the public URL never changes between
   restarts:
 
-      https://openchat-v2-mrtristin.loca.lt
+      https://openchat-mrtristin.loca.lt
 
   Schedule it to run every minute (Task Scheduler):
 
@@ -20,8 +20,8 @@ $ErrorActionPreference = 'Continue'
 
 $ScriptDir   = $PSScriptRoot
 $LocalApi    = 'http://127.0.0.1:3000'
-$PublicUrl   = 'https://openchat-v2-mrtristin.loca.lt'
-$Subdomain   = 'openchat-v2-mrtristin'
+$PublicUrl   = 'https://openchat-mrtristin.loca.lt'
+$Subdomain   = 'openchat-mrtristin'
 $LtBin       = Join-Path $ScriptDir 'node_modules\localtunnel\bin\lt.js'
 $TunnelLog   = Join-Path $ScriptDir 'tools\lt.log'
 $TunnelErr   = Join-Path $ScriptDir 'tools\lt.err'
